@@ -2,20 +2,38 @@
 #define PIN 6
 #define NUMPIXELS 64
 #define SIZE 8
+#define LONGPLATFORM 3
 Adafruit_NeoPixel strip(NUMPIXELS, PIN, NEO_GRB + NEO_KHZ800);
 
 //Matrix ledMatrix(SIZE, SIZE);
 
 void setPixelColor(int x, int y) {
-    if (y%2==1){
-      int serialNumber =  y * SIZE + x;
-      strip.setPixelColor(serialNumber, strip.Color(0, 250, 0));
-    }
-    else {
-      int serialNumber = y * SIZE + (SIZE - 1) - x; 
-      strip.setPixelColor(serialNumber, strip.Color(0, 250, 0));
-    }
+  if (y%2==1){
+    int serialNumber =  y * SIZE + x;
+    strip.setPixelColor(serialNumber, strip.Color(0, 250, 0));
+  }
+  else {
+    int serialNumber = y * SIZE + (SIZE - 1) - x; 
+    strip.setPixelColor(serialNumber, strip.Color(0, 250, 0));
+  }
 }
+
+class Platform {
+  public:
+  int xP;
+  int yP;
+  public:
+  Platform(int coordXPlat, int coordYPlat){
+    xP = coordXPlat;
+    yP = coordYPlat;
+  }
+
+  void show() {
+    for(int i = xP - LONGPLATFORM / 2 ; i < LONGPLATFORM; i++){
+      setPixelColor(i, yP);
+    }
+  }
+};  
 
 class Ball {
 public:
@@ -28,7 +46,6 @@ public:
     setPosition(coordX, coordY);
     spX = speedX;
     spY = speedY;
-    
   }
 
   void setPosition(int coordX, int coordY) {
@@ -36,19 +53,36 @@ public:
     y = coordY;
   }
 
-  void move() {
+  void move(Platform & platform1, Platform & platform2) {
     if (x >= SIZE - 1 || x <= 0) {
       spX *= -1;
     }
-    if (y >= SIZE - 1 || y <= 0) {
+    if (y == platform1.yP + 1 && x >= platform1.xP - LONGPLATFORM / 2 && x < platform1.xP + LONGPLATFORM ) {
+      spY *= -1;
+    }
+    if (y == platform2.yP - 1 && x >= platform2.xP - LONGPLATFORM / 2 && x < platform2.xP + LONGPLATFORM ) {
       spY *= -1;
     }
     x += spX;
     y += spY;
   }
+
+  void show() {
+    setPixelColor(x, y);
+  }
 };
 
+
+
+
+
+
+
+
+
 Ball ball(1, 3, -1, 1);
+Platform platform1(1, 0);
+Platform platform2(1, SIZE - 1);
 
 void setup() {
   strip.begin(); 
@@ -59,10 +93,12 @@ void setup() {
 void loop() {
   strip.clear();
 
-  ball.move();
+  ball.move(platform1, platform2);
 
   // draw ball
-  setPixelColor(ball.x, ball.y);
+  ball.show();
+  platform1.show();
+  platform2.show();
 
    //draw platform1
   //setPixelColor(platform1.x, platform1.y);
